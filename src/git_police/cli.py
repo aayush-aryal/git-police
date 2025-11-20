@@ -19,16 +19,16 @@ def git_diff():
     
 
 @app.command()
-def patrol(mode:str=typer.Option("local",help="local (Ollama) or global (Gemini)"),
+def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POLICE_MODE"),
            model:str= typer.Option("gemma3:latest", help="The Ollama model to use (only for local mode)")):
     diff= git_diff()
 
     if not diff or len(diff.strip()) == 0:
-        console.print("No staged changes found. git add ")
+        console.print("[bold red] No staged changes found. [/bold red]. use [bold green] git add [/bold green]")
         sys.exit(0)
     
     console.print(Panel.fit(
-        f"Git police {mode} mode [bold blue] analyzing... [/bold blue]",
+        f"Git police: [bold yellow] {mode} [/bold yellow] mode [bold blue] analyzing... [/bold blue]",
         border_style="blue"
     ))
     with console.status("[bold green] Generating question ... [/bold green]", spinner="dots"):
@@ -43,16 +43,16 @@ def patrol(mode:str=typer.Option("local",help="local (Ollama) or global (Gemini)
 
     answer=Prompt.ask("\n Your answer")
 
-    with console.status("[bold yellow] Using our not so expert insights [/bold yellow]", spinner="moon"):
+    with console.status("[bold yellow] Using our not so expert insights [/bold yellow]", spinner="dots"):
          verdict=judge_answer(diff, question, answer, mode, model)
 
-         if verdict and "PASS" in verdict:
-            console.print("\n[bold green]✅ VERDICT: PASS[/bold green]")
+         if verdict and "PASS" in verdict.strip().upper():
+            console.print("\n[bold green]VERDICT: PASS[/bold green]")
             console.print("[dim]Commit allowed. Proceeding...[/dim]")
             sys.exit(0)
          else:
             console.print("\n[bold red] VERDICT: FAIL [/bold red]")
-            console.print("Commit aborted :( ")
+            console.print("Commit aborted :(")
             sys.exit(1)
         
     
