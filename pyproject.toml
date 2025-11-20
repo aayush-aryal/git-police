@@ -1,0 +1,23 @@
+[project]
+name = "git-police"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-genai>=1.51.0",
+    "ollama>=0.6.1",
+    "rich>=14.2.0",
+    "scrubadub>=2.0.1",
+    "typer>=0.20.0",
+]
+
+[project.scripts]
+git-police="git_police.cli:app"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}

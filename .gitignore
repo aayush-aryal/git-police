@@ -1,0 +1,24 @@
+# --- Python Bytecode (Junk) ---
+__pycache__/
+*.pyc
+
+# --- Build Artifacts (Crucial for you) ---
+# This is the specific folder you asked about:
+*.egg-info/
+dist/
+build/
+
+# --- Virtual Environments (NEVER commit these) ---
+.venv/
+venv/
+ENV/
+
+# --- IDE Settings (Optional but recommended) ---
+.vscode/
+.idea/
+
+# --- macOS Junk ---
+.DS_Store
+
+# --- UV / Packaging specific ---
+.uv/
