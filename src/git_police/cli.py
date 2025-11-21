@@ -42,7 +42,7 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
     console.print(f"\n[bold yellow underline]Question:[/bold yellow underline]")
     console.print(question)
 
-    answer=Prompt.ask("\n [bold white underline] Your answer [/bold white]")
+    answer=Prompt.ask("\n [bold cyan underline] Your answer [/]")
 
     with console.status("[bold yellow] Using our not so expert insights [/bold yellow]", spinner="dots"):
          verdict=judge_answer(diff, question, answer, mode, model)
