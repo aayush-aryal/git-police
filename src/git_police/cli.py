@@ -21,10 +21,11 @@ def git_diff():
 @app.command()
 def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POLICE_MODE"),
            model:str= typer.Option("gemma3:latest", help="The Ollama model to use (only for local mode)")):
+    """Analyzes git diff, asks a question and decides whether to approve commit based on answer."""
     diff= git_diff()
 
     if not diff or len(diff.strip()) == 0:
-        console.print("[bold red] No staged changes found. [/bold red]. use [bold green] git add [/bold green]")
+        console.print("[bold red] No staged changes found[/bold red]. Use[bold green] git add [/bold green]")
         sys.exit(0)
     
     console.print(Panel.fit(
@@ -38,7 +39,7 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
             console.print(f"\n [bold red] Error: {question}")
             sys.exit(1)
     
-    console.print(f"\n[bold red]INTERROGATION:[/bold red]")
+    console.print(f"\n[bold yellow underline]Question:[/bold yellow underline]")
     console.print(question)
 
     answer=Prompt.ask("\n Your answer")
@@ -52,7 +53,7 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
             sys.exit(0)
          else:
             console.print("\n[bold red] VERDICT: FAIL [/bold red]")
-            console.print("Commit aborted :(")
+            console.print("Commit aborted")
             sys.exit(1)
         
     
@@ -75,10 +76,8 @@ def init():
         "#!/bin/sh\n"
         "exec < /dev/tty\n"
         "echo \"\n\n---RUNNING GIT POLICE INTERROGATION ---\"\n"
-        "# This command uses 'uv run' to execute your Python script\n"
-        "# The arguments are passed to your patrol function.\n"
-        # We call the 'patrol' function you just wrote
-        "uv run git-police patrol \"$@\"\n" 
+        # We call the 'patrol' function "$@ passes all the arguments passed dow"
+        "git-police patrol \"$@\"\n" 
         "\n# Exit code of the patrol command determines if the commit proceeds.\n"
     )
     

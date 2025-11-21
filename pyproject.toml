@@ -16,8 +16,3 @@ dependencies = [
 git-police="git_police.cli:app"
 
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
