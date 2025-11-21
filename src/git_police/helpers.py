@@ -16,10 +16,17 @@ def sanitize_diff(diff_text:str)->str:
     clean_text=scrubber.clean(diff_text, replace_with="placeholder")
     return clean_text
 
+def get_cleaned_files(arr: list[str]) -> list[str]:
+    cleaned = []
+    for f in arr:
+        if f in IGNORED_FILES:
+            continue
 
-def get_cleaned_files(arr:list[str])->list[str]:
-    return [x for x in arr if x not in IGNORED_EXTENSIONS and IGNORED_FILES]
-
-
+        if any(f.endswith(ext) for ext in IGNORED_EXTENSIONS):
+            continue
+            
+        cleaned.append(f)
+        
+    return cleaned
 
 

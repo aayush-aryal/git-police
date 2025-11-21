@@ -10,24 +10,23 @@ def ask_interrogator(diff: str, mode: str, model: str):
     """
 
     system_instruction = (
-        "You are a Senior Code Reviewer. Your job is to catch logical errors and ask questions about the code changes"
-        "\n\n"
-        "INSTRUCTIONS:\n"
-        "1. specific conceptual question about the logic in the diff.\n"
+        "ROLE: Senior Code Reviewer.\n"
+        "TASK: Analyze the code changes in the <GIT_DIFF> block and ask one critical question.\n"
+        "\n"
+        "<RULES>\n"
+        "1. Question MUST be about the logic/architecture in the diff.\n"
         "2. Be extremely concise (under 50 words).\n"
-        "3. Do NOT output preamble like 'Okay' or 'Here is the question'.\n"
+        "3. Do NOT summarize. Do NOT output preamble.\n"
+        "4. Do NOT mimic the examples below. Just ask the question.\n"
+        "</RULES>\n"
         "\n"
-        "EXAMPLES:\n"
-        "Diff: Removed a try/except block.\n"
-        "Bad Question: Why did you change this file?\n"
-        "Good Question: Why did you remove the error handling in user_login? This could cause the app to crash on bad credentials.\n"
-        "\n"
-        "Diff: Added a new API endpoint.\n"
-        "Bad Question: What does this code do?\n"
-        "Good Question: You added a /delete endpoint but I don't see any authentication check. Is this intentional?\n"
-        "\n"
-        "Now, review the user's diff and ask a GOOD question."
+        "<EXAMPLES>\n"
+        "Input: Removed try/except block.\n"
+        "Output: Why did you remove the error handling? This could crash the app.\n"
+        "</EXAMPLES>"
     )
+
+    diff=f"<GIT_DIFF>\n{diff}\n</GIT_DIFF>\n\nBased on the code above, what is your specific question?"
     if mode=="local":
         response= chat(model=model, messages=[
             {'role':'system', 'content':system_instruction},

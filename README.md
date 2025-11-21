@@ -2,6 +2,12 @@
 
 An Anti-AI slop tool that helps prevent slop code from being pushed and allows only the code that you understand to be pushed
 
+install this in your virtual environment
+
+```bash
+pip install git-police
+```
+
 # To initialize
 
 ```bash
@@ -17,7 +23,7 @@ git add .
 GIT_POLICE_MODE=global git commit -m "msg"
 ```
 
-# To run a different ollama model than phi3.5
+# To run a different ollama model than phi4-mini:latest
 
 If you don't have the ollama model
 Make sure you have ollama installed in your system

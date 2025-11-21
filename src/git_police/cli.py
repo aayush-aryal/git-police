@@ -60,11 +60,12 @@ def get_diff_string(files:list[str], max_count=12000)->str:
 
 @app.command()
 def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POLICE_MODE"),
-           model:str= typer.Option("phi3.5:latest", help="The Ollama model to use (only for local mode)", envvar="GIT_POLICE_MODEL"),
+           model:str= typer.Option("phi4-mini:latest", help="The Ollama model to use (only for local mode)", envvar="GIT_POLICE_MODEL"),
            max_char:int=typer.Option(12000, help="Maximum characters sent to the model (if your local model is slow)", envvar="MAX_CHAR")):
     """Analyzes git diff, asks a question and decides whether to approve commit based on answer."""
     files=get_diff_files()
     relevant_files=get_cleaned_files(files)
+
 
     if not relevant_files:
         console.print("[dim]Only docs/config changed. Skipping interrogation.[/dim]")
@@ -114,7 +115,16 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
             console.print("Commit aborted")
             sys.exit(1)
         
-    
+
+def get_git_root():
+    try:
+        result=subprocess.run(
+            ["git","rev-parse","show-toplevel"],
+            capture_output=True, text=True, check=True
+        ) 
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return None
 
 
     
@@ -122,12 +132,16 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
 def init():
     """Installs the pre-commit hook into the current Git repository."""
     #if we are not  in a Git repository
-    if not os.path.exists(".git"):
-        console.print("[bold red]Error:[/bold red] Not a Git repository. Run this command inside your repo.")
-        sys.exit(1)
-        
+    git_root=get_git_root()
 
-    hook_path = ".git/hooks/pre-commit"
+    if not git_root:
+        console.print("[bold red]Error:[/bold red] Not a Git repository. Run 'git init' first.")
+        sys.exit(1)   
+
+    hook_dir=os.path.join(git_root,".git","hooks")
+    hook_path=os.path.join(hook_dir,"pre-commit")    
+
+
     
     # shell script
     hook_content = (
