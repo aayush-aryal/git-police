@@ -20,7 +20,7 @@ def git_diff():
 
 @app.command()
 def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POLICE_MODE"),
-           model:str= typer.Option("gemma3:latest", help="The Ollama model to use (only for local mode)")):
+           model:str= typer.Option("gemma3:latest", help="The Ollama model to use (only for local mode)"), envvar="GIT_POLICE_MODEL"):
     """Analyzes git diff, asks a question and decides whether to approve commit based on answer."""
     diff= git_diff()
 
@@ -42,7 +42,7 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
     console.print(f"\n[bold yellow underline]Question:[/bold yellow underline]")
     console.print(question)
 
-    answer=Prompt.ask("\n Your answer")
+    answer=Prompt.ask("\n [bold white underline] Your answer [/bold white]")
 
     with console.status("[bold yellow] Using our not so expert insights [/bold yellow]", spinner="dots"):
          verdict=judge_answer(diff, question, answer, mode, model)
