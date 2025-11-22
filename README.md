@@ -17,7 +17,7 @@ git add .
 GIT_POLICE_MODE=global git commit -m "msg"
 ```
 
-# To run a different ollama model than gemma3
+# To run a different ollama model than phi3.5
 
 If you don't have the ollama model
 Make sure you have ollama installed in your system
@@ -25,6 +25,12 @@ Make sure you have ollama installed in your system
 ```bash
 ollama pull your_model
 GIT_POLICE_MODEL="your_model" git commit -m "msg"
+```
+
+# You can change Max characters sent to your local model for speed
+
+```bash
+MAX_CHAR=int GIT_POLICE_MODEL="your model if not default and not in env" git commit -m "msg"
 ```
 
 ```bash

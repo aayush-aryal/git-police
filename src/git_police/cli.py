@@ -73,6 +73,7 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
     sorted_files=get_sorted_diff_files(relevant_files)
 
     if mode=="local":
+        console.print(f"[dim](Speed depends on your hardware)[/dim]")
         diff=get_diff_string(sorted_files, max_char)
     else:
         diff = get_diff_string(sorted_files, 120000)
