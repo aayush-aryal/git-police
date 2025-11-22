@@ -10,7 +10,7 @@ def ask_interrogator(diff: str, mode: str, model: str):
     """
 
     system_instruction = (
-        "You are a Senior Code Reviewer. Your job is to catch logical errors."
+        "You are a Senior Code Reviewer. Your job is to catch logical errors and ask questions about the code changes"
         "\n\n"
         "INSTRUCTIONS:\n"
         "1. specific conceptual question about the logic in the diff.\n"
