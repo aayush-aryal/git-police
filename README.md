@@ -1,56 +1,87 @@
 # Git Police
 
-An Anti-AI slop tool that helps prevent slop code from being pushed and allows only the code that you understand to be pushed
+Git Police is a commit-time assistant designed to prevent low-quality or AI-slop code from being pushed.
+It challenges you with a senior-developer style question about your changes and only allows the commit when you demonstrate understanding of the code.
 
-install this in your virtual environment
+It supports both local models via Ollama and remote evaluation using Gemini.
+
+# Installation
+
+Install inside your virtual environment
 
 ```bash
 pip install git-police
 ```
 
-# To initialize
+# Initialization
+
+Run once inside a git repository
 
 ```bash
 git-police init
 ```
 
-# To run global (only supports gemini for now)
+This sets up the Git hook that triggers the code-understanding check before each commit.
 
-export a `GEMINI_API_KEY` as an environment variable
+# To run global mode (Gemini only)
+
+1. Export your `GEMINI_API_KEY`
 
 ```bash
-git add .
+export GEMINI_API_KEY="your_api_key"
+```
+
+2. Run a commit with global mode enabled
+
+```bash
 GIT_POLICE_MODE=global git commit -m "msg"
 ```
 
-# To run a different ollama model than phi4-mini:latest
+# To run a different Ollama model
 
-If you don't have the ollama model
-Make sure you have ollama installed in your system
+By default, Git Police uses phi4-mini:latest.
+To use a different local model:
+
+1. Ensure you have ollama in your system
+2. pull the model you want to use
+3. Commit using the model
+
+# You can either use
 
 ```bash
-ollama pull your_model
 GIT_POLICE_MODEL="your_model" git commit -m "msg"
 ```
 
-# You can change Max characters sent to your local model for speed
+To use the model
+
+# Or set it up once
 
 ```bash
-MAX_CHAR=int GIT_POLICE_MODEL="your model if not default and not in env" git commit -m "msg"
+export GIT_POLICE_MODEL="your_model"
 ```
 
+and now you can commit as normal and it will use your specified model
+
+# Adjusting Maximum Characters Sent to the Local Model
+
+If you want faster responses from your local model, you can reduce the number of characters sent:
+
 ```bash
-git add .
-GIT_POLICE_MODEL="your_model" git commit -m "msg"
+MAX_CHAR=5000 GIT_POLICE_MODEL="your_model" git commit -m "msg"
 ```
 
-# Incase of hallucinations or emergency commits
+Adjust `MAX_CHAR` as needed
+
+# Bypassing the Check (Emergency Commits)
+
+If you encounter hallucinations or need to bypass Git Police temporarily:
 
 ```bash
-git add .
 git commit -m "your msg" --no-verify
 ```
 
-# See it work
+# Example
 
-![approved](images/working_example.png)
+See git-police in action
+
+![approved](images/updated.png)
