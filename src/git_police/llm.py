@@ -1,17 +1,44 @@
 import os 
 from google import genai
 from ollama import ChatResponse, chat
-from .cleaner import sanitize_diff
+from .helpers import sanitize_diff
 
 
-def ask_interrogator(diff:str, mode:str, model:str):
+def ask_interrogator(diff: str, mode: str, model: str):
+    """
+    STREAMING: Yields chunks of text for the UI.
+    """
+
+    system_instruction = (
+        "You are a Senior Code Reviewer. Your job is to catch logical errors."
+        "\n\n"
+        "INSTRUCTIONS:\n"
+        "1. specific conceptual question about the logic in the diff.\n"
+        "2. Be extremely concise (under 50 words).\n"
+        "3. Do NOT output preamble like 'Okay' or 'Here is the question'.\n"
+        "\n"
+        "EXAMPLES:\n"
+        "Diff: Removed a try/except block.\n"
+        "Bad Question: Why did you change this file?\n"
+        "Good Question: Why did you remove the error handling in user_login? This could cause the app to crash on bad credentials.\n"
+        "\n"
+        "Diff: Added a new API endpoint.\n"
+        "Bad Question: What does this code do?\n"
+        "Good Question: You added a /delete endpoint but I don't see any authentication check. Is this intentional?\n"
+        "\n"
+        "Now, review the user's diff and ask a GOOD question."
+    )
     if mode=="local":
-        response:ChatResponse= chat(model=model, messages=[
-            {'role':'system', 'content':'You are a strict code reviewer.Ask one conceptual "WHY" question about the logic changes.'},
+        response= chat(model=model, messages=[
+            {'role':'system', 'content':system_instruction},
             {'role':'user','content':diff}
-
-        ])
-        return (response['message']['content'])
+        ], stream=True,
+        options={
+            "num_predict":100,
+            "temperature":0.2,
+        })
+        for chunk in response:
+            yield chunk['message']['content']
     elif mode=="global":
         cleaned_diff=sanitize_diff(diff)
         api_key=os.getenv("GEMINI_API_KEY")
@@ -21,11 +48,13 @@ def ask_interrogator(diff:str, mode:str, model:str):
         try:
             client=genai.Client(api_key=api_key)
 
-            gemini_response=client.models.generate_content(
+            gemini_response=client.models.generate_content_stream(
                 model="gemini-2.5-flash",
                 contents=f"You are a Senior Code Reviewer. Ask one single, hard question about this code logic:\n\n{cleaned_diff}"
             )
-            return gemini_response.text
+            for chunk in gemini_response:
+                if chunk.text:
+                    yield chunk.text
         except Exception as e:
             return f"Error connecting to Gemini: {str(e)}"
     return "Error: Invalid mode selected"
@@ -58,9 +87,10 @@ def judge_answer(diff:str, question:str, answer:str, mode:str, model:str):
         try:
             response=chat(model=model, messages=[
                 {'role':'user','content':evaluation_prompt}
-
             ])
             return response['message']['content'].strip().upper()
+
+
         except Exception:
             return "ERROR: LOCAL JUDGE FAILED"
         

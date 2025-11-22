@@ -3,9 +3,12 @@ import subprocess
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.live import Live
+from rich.markdown import Markdown
 import sys
 from .llm import ask_interrogator, judge_answer
 import os
+from .helpers import get_cleaned_files
 
 app=typer.Typer()
 console=Console()
@@ -16,14 +19,65 @@ def git_diff():
         return result.stdout
     except subprocess.CalledProcessError:
         return None
-    
+
+def get_diff_files():
+    #idea: the most changed file is what you have been working on the most
+    #get 
+    try:
+        result=subprocess.run(["git","diff","--cached","--name-only"], capture_output=True, text=True, check=True)
+        files=result.stdout.splitlines()
+        return files 
+    except subprocess.CalledProcessError:
+        return []
+
+def get_sorted_diff_files(files:list[str])->list[str]:
+    sorted_files=[]
+    cmd=["git",'diff',"--cached","--numstat","--"]+files
+    result=subprocess.run(cmd,text=True, capture_output=True)
+    splitted=result.stdout.splitlines()
+    for s in splitted:
+        add,rm,fn=s.split("\t")
+        sorted_files.append((add,rm,"".join(fn)))
+    sorted_files=sorted(sorted_files, key=lambda x:int(x[0]),reverse=True)
+    sorted_files=[x[2] for x in sorted_files]
+    return sorted_files
+
+
+
+def get_diff_string(files:list[str], max_count=12000)->str:
+    curr_str=""
+    for f in files:
+        result=subprocess.run(["git","diff","--cached",f], capture_output=True, text=True,check=False)
+        if len(curr_str)<=max_count:
+            #not doing line by line cause it seems slow this will probably limit the max token and make it faster
+            curr_str+=result.stdout
+        else:
+            curr_str+="[...OUTPUT TRUNCATED]"
+            break
+    return curr_str
+
+
 
 @app.command()
 def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POLICE_MODE"),
-           model:str= typer.Option("gemma3:latest", help="The Ollama model to use (only for local mode)"), envvar="GIT_POLICE_MODEL"):
+           model:str= typer.Option("phi3.5:latest", help="The Ollama model to use (only for local mode)", envvar="GIT_POLICE_MODEL"),
+           max_char:int=typer.Option(12000, help="Maximum characters sent to the model (if your local model is slow)", envvar="MAX_CHAR")):
     """Analyzes git diff, asks a question and decides whether to approve commit based on answer."""
-    diff= git_diff()
+    files=get_diff_files()
+    relevant_files=get_cleaned_files(files)
 
+    if not relevant_files:
+        console.print("[dim]Only docs/config changed. Skipping interrogation.[/dim]")
+        sys.exit(0)
+
+    sorted_files=get_sorted_diff_files(relevant_files)
+
+    if mode=="local":
+        diff=get_diff_string(sorted_files, max_char)
+    else:
+        diff = get_diff_string(sorted_files, 120000)
+    if "[...OUTPUT TRUNCATED]" in diff:
+        console.print("[bold yellow] Changes exceed max char, so asking question based on truncated string [/bold yellow]")
     if not diff or len(diff.strip()) == 0:
         console.print("[bold red] No staged changes found[/bold red]. Use[bold green] git add [/bold green]")
         sys.exit(0)
@@ -32,20 +86,23 @@ def patrol(mode:str=typer.Option("local",help="local or global", envvar="GIT_POL
         f"Git police: [bold yellow] {mode} [/bold yellow] mode [bold blue] analyzing... [/bold blue]",
         border_style="blue"
     ))
-    with console.status("[bold green] Generating question ... [/bold green]", spinner="dots"):
-        question=ask_interrogator(diff, mode, model)
-    
-    if not question or question.startswith("Error:"):
-            console.print(f"\n [bold red] Error: {question}")
+
+    console.print(f"\n[bold cyan underline]Question:[/bold cyan underline]")
+    full_question=""
+    with Live("", refresh_per_second=15, console= console) as live:
+        for chunk in ask_interrogator(diff,mode,model):
+            full_question+=chunk 
+            live.update(Markdown(full_question))
+
+    if not full_question or full_question.startswith("Error:"):
+            console.print(f"\n [bold red] Error: {full_question}")
             sys.exit(1)
     
-    console.print(f"\n[bold yellow underline]Question:[/bold yellow underline]")
-    console.print(question)
 
     answer=Prompt.ask("\n [bold cyan underline] Your answer [/]")
 
     with console.status("[bold yellow] Using our not so expert insights [/bold yellow]", spinner="dots"):
-         verdict=judge_answer(diff, question, answer, mode, model)
+         verdict=judge_answer(diff, full_question, answer, mode, model)
 
          if verdict and "PASS" in verdict.strip().upper():
             console.print("\n[bold green]VERDICT: PASS[/bold green]")
@@ -88,7 +145,7 @@ def init():
         # Make the file executable
         os.chmod(hook_path, 0o755)
         
-        console.print("\n[bold green]✅ Git Police Hook Installed![/bold green]")
+        console.print("\n[bold green]✅Git Police Hook Installed![/bold green]")
         console.print(f"[dim]Run 'git commit' to test the interrogation. Default is local mode.[/dim]")
         
     except Exception as e:
