@@ -1,6 +1,6 @@
 [project]
 name = "git-police"
-version = "0.1.4"
+version = "0.1.6"
 description = "A package that prevents AI slop by asking you questions about your code changes before allowing you to commit"
 license={text="MIT"}
 readme = "README.md"
@@ -16,4 +16,8 @@ dependencies = [
 [project.scripts]
 git-police="git_police.cli:app"
 
+[project.urls]
+Homepage = "https://github.com/aayush-aryal/git-police"
+Repository = "https://github.com/aayush-aryal/git-police"
+Issues = "https://github.com/aayush-aryal/git-police/issues"
 

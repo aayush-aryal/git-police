@@ -1,5 +1,7 @@
 # Git Police
 
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/git-police?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/git-police)
+
 Git Police is a commit-time assistant designed to prevent low-quality or AI-slop code from being pushed.
 It challenges you with a senior-developer style question about your changes and only allows the commit when you demonstrate understanding of the code.
 
